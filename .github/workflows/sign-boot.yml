@@ -1,1 +1,27 @@
-
+name: AOSP Boot重签
+on:
+  push:
+    paths:
+      - 'boot.img'
+  workflow_dispatch:
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取仓库代码
+        uses: actions/checkout@v4
+      - name: 下载签名工具
+        run: |
+          curl -L https://github.com/showdo/AOSP_REBUILD_AVB_BOOT/archive/refs/heads/main.tar.gz -o avb_boot.tar.gz
+          tar -xzf avb_boot.tar.gz
+      - name: 执行重签
+        run: |
+          cd AOSP_REBUILD_AVB_BOOT-main
+          cp ../boot.img ./boot.img
+          python3 rebuild_avb.py --chained-mode
+          cp ./boot.img ../boot_signed.img
+      - name: 保存结果
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-boot
+          path: boot_signed.img
